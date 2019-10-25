@@ -70,12 +70,17 @@ The executables should be located under `./build/bin/`.
 (NOT FULLY TESTED.)
 
 This folder contains logic and templates to use Cloudformation to set up (and
-tear down) a sample lambda function from my Linux environment at work.
+tear down) sample lambda functions from my Linux environment at work.
 
-The sample lambda is a Python function that prints the ingested event to the log.
-It is set up to run every 5 minutes with a cron event.
+The `moppa/cloudformation/lambda-sample.yaml` stack deploys a Python function
+that prints the ingested event to the log.  It is set up to run every 5 minutes
+with a cron event.
 
-To use:
+The `moppa/cloudformation/lambda-fortwrap.yaml` stack deploys a Python function
+to wrap a Fortran binary. The Fortran binary needs to be built for Amazon Linux 2
+with some libraries statically linked. This still requires some work.
+
+To use (in theory):
 1. Set up your environment using the `conda-aws-access` instruction above.
 3. Run `python3 -m moppa.cloudformation.main validate` to validate the templates.
 3. Run `python3 -m moppa.cloudformation.main setup` to setup.
@@ -83,5 +88,5 @@ To use:
 
 ## What's Next?
 
-I'll experiment with packaging up an AWS Lambda function to run a Fortran
-executable with a Python wrapper.
+I'll improve the process for packinging Fortran binaries with Python wrappers
+for Lambda deployment.
