@@ -1,0 +1,16 @@
+# This allows me to have access to the "aws" CLI command and the Boto3 Python
+# library for accessing AWS via the Python API.
+name: aws-access
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python>=3.6
+  - pip
+  - pylint
+  - pytest
+  - pytest-cov
+  - awscli
+  - boto3
+  - cfn-lint
+  - click
