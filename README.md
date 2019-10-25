@@ -106,3 +106,7 @@ Experiment with running Fortran executables with inputs using a Python wrapper i
 The python wrapper should be able to generate some of the inputs going into the Fortran
 executable. E.g.: It should inspect the event payload, and creating the correct input namelist
 based on the values in the event payload.
+
+Add automated tests for logic.
+
+Reorganise the project tree or put things in separate projects.
