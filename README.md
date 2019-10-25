@@ -11,13 +11,17 @@ environment that allows me to access AWS functionalities on my Linux
 environment at work.
 
 1. Install [Miniconda](https://docs.conda.io/en/latest/miniconda.html)
-   if required.
+   if you have not already done so.
 2. Download the `conda-aws-access/requirements.yml` file.
 3. Change directory to where the `requirements.yml` file is saved.
 4. Run `conda env create`.
 5. Run `conda activate aws-access`.
 6. Type `aws` to test that you have access to the `aws` command.
 7. Type `python3 -c 'import boto3"` to test that you can import `boto3`.
+8. Follow the instructions at
+   [Configure the AWS CLI](https://docs.aws.amazon.com/en_pv/cli/latest/userguide/cli-chap-configure.html)
+   to set up a profile. When prompted for a region, use `eu-west-2`
+   which is *EU (London)* if you live in the UK.
 
 ## docker-gfortran-fcm-make-netcdf
 
@@ -31,7 +35,7 @@ You can use the `Dockerfile` to build an image that installs:
 
 > Alternatively, you can set up an AWS EC2 instance running Amazon Linux 2,
 > and roughly follow the instruction of the `Dockerfile` to create a suitable
-> environment. (I'll see if this can be done via AWS Cloudformation in the future.)
+> environment. (I'll attempt to write a cloudformation template to automate this soon.)
 
 To use the docker image. You will need to be in an environment that can run
 [Docker](https://www.docker.com/). The easiest way is to use an Amazon EC2
@@ -42,7 +46,9 @@ instance by following the instructions:
 
 Once you are set up, build the docker image:
 1. Copy/Download the `Dockerfile` to a suitable folder. Change directory to it.
-2. Run `docker build -t myfortran .`, (note the `.` at the end of the command.)
+2. Run `docker build -t myfortran .`
+   * Note the `.` at the end of the command.
+   * Change `myfortran` to a different name if you want.
 
 Get JULES, export a suitable source tree from
 [MOSRS](https://code.metoffice.gov.uk/). (Account required.)
@@ -55,7 +61,8 @@ Build JULES:
 2. Run the docker image, binding `$PWD` into a volume in the container. E.g.:
 
 ```sh
-docker run --rm -t -i -v $PWD:/opt/jules-5.5 myfortran env \
+docker run --rm -t -i -v $PWD:/opt/jules-5.5 myfortran \
+    env \
     JULES_PLATFORM=vm \
     JULES_NETCDF=netcdf \
     JULES_NETCDF_INC_PATH=/usr/local/include \
@@ -64,6 +71,8 @@ docker run --rm -t -i -v $PWD:/opt/jules-5.5 myfortran env \
 ```
 
 The executables should be located under `./build/bin/`.
+I have not yet figure out if this can be deployed in a lambda or not.
+I have also not tested this with real inputs.
 
 ## lambda-sample
 
@@ -78,7 +87,7 @@ with a cron event.
 
 The `moppa/cloudformation/lambda-fortwrap.yaml` stack deploys a Python function
 to wrap a Fortran binary. The Fortran binary needs to be built for Amazon Linux 2
-with some libraries statically linked. This still requires some work.
+with some libraries statically linked. This still require work to automate.
 
 To use (in theory):
 1. Set up your environment using the `conda-aws-access` instruction above.
@@ -88,5 +97,12 @@ To use (in theory):
 
 ## What's Next?
 
-I'll improve the process for packinging Fortran binaries with Python wrappers
-for Lambda deployment.
+Automate creating key-pair for accessing EC2 instance,
+putting the private key in a common location in my Linux environment at work.
+
+Fully automate JULES build on EC2 instance and deployment to lambda afterwards.
+
+Experiment with running Fortran executables with inputs using a Python wrapper in a lambda.
+The python wrapper should be able to generate some of the inputs going into the Fortran
+executable. E.g.: It should inspect the event payload, and creating the correct input namelist
+based on the values in the event payload.
