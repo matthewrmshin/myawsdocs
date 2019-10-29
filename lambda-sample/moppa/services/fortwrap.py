@@ -26,8 +26,10 @@ def lambda_handler(event, context):
         with open(FILENAME_WHO_NL, 'w') as handle:
             handle.write('&who_nl who="%(who)s", /\n' % event)
             handle.close()
-        invoke_hello(event, context)
-        os.chdir(oldcwd)
+        try:
+            invoke_hello(event, context)
+        finally:
+            os.chdir(oldcwd)
     else:
         invoke_hello(event, context)
 
@@ -35,13 +37,16 @@ def lambda_handler(event, context):
 def invoke_hello(event, context):
     """Invoke the "hello.bin" program."""
     mybin = Path(__file__).parent.joinpath('hello.bin')
-    proc = Popen([str(mybin)], stdout=PIPE)
+    proc = Popen([str(mybin)], stdout=PIPE, stderr=PIPE)
+    out, err = proc.communicate()
+    if err:
+        LOG.error('%s says "%s"', mybin, err)
+    if out:
+        LOG.info('%s says "%s"', mybin, out)
     if proc.wait():
-        exc = RuntimeError('%s returns %d' % mybin, proc.returncode)
+        exc = RuntimeError('%s returns %d' % (mybin, proc.returncode))
         LOG.exception(exc)
         raise exc
-    else:
-        LOG.info('%s says "%s"', mybin, proc.communicate()[0])
 
 
 if __name__ == '__main__':

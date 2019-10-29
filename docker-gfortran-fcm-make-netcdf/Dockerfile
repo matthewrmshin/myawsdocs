@@ -5,7 +5,15 @@ LABEL description="GFortran & netCDF & FCM Make on Amazon Linux 2" \
       version="0.1"
 
 # Dependencies for FCM Make.
-RUN yum -y update && yum -y install curl gcc-gfortran gzip perl-core tar
+RUN yum -y update \
+    && yum -y install curl gcc-gfortran glibc-static gzip perl-core tar
+
+# Dependencies for netCDF libraries.
+# Note: NetCDF libraries on EPEL do not work with modern GFortran,
+#       so building from source here.
+RUN yum -y install libcurl-devel make m4 zlib-devel \
+    && yum -y install https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm \
+    && yum -y install hdf5 hdf5-devel
 
 # Install FCM Make
 WORKDIR /opt
@@ -14,13 +22,6 @@ RUN curl -L "https://github.com/metomi/fcm/archive/${FCM_VN}.tar.gz" | tar -xz
 WORKDIR /usr/local/bin
 RUN echo -e '#!/bin/sh'"\n"'exec /opt/fcm-${FCM_VN}/bin/fcm "$@"' >'fcm' \
     && chmod +x 'fcm'
-
-# Dependencies for netCDF libraries.
-# Note: NetCDF libraries on EPEL do not work with modern GFortran,
-#       so building from source here.
-RUN yum -y install libcurl-devel make m4 zlib-devel \
-    && yum -y install https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm \
-    && yum -y install hdf5 hdf5-devel
 
 # Build and install netCDF libraries.
 WORKDIR /opt
@@ -37,4 +38,3 @@ RUN env CPPFLAGS=-I${NCDIR}/include LDFLAGS=-L${NCDIR}/lib ./configure --prefix=
     && make check install && nf-config --all
 
 WORKDIR /opt
-RUN rm -fr /opt/netcdf-c-${NC_VN} /opt/netcdf-fortran-${NF_VN}
