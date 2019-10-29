@@ -54,7 +54,7 @@ Resources:
       Handler: moppa/services/index.handler
       MemorySize: 128
       Role: !GetAtt SampleLambdaExecutionRole.Arn
-      Runtime: nodejs10.x
+      Runtime: python3.7
       Timeout: 4
       Tags:
       - Key: ServiceName

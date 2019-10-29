@@ -23,7 +23,7 @@ environment at work.
    to set up a profile. When prompted for a region, use `eu-west-2`
    which is *EU (London)* if you live in the UK.
 
-## docker-gfortran-fcm-make-netcdf
+## amazonlinux2-gfortran-fcm-make-netcdf
 
 In this folder is a `Dockerfile` that documents how to create an environment on
 Amazon Linux 2 to compile [JULES](https://jules.jchmr.org/)

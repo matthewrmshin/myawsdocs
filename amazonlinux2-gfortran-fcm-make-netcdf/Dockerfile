@@ -20,7 +20,7 @@ WORKDIR /opt
 ENV FCM_VN=2019.09.0
 RUN curl -L "https://github.com/metomi/fcm/archive/${FCM_VN}.tar.gz" | tar -xz
 WORKDIR /usr/local/bin
-RUN echo -e '#!/bin/sh'"\n"'exec /opt/fcm-${FCM_VN}/bin/fcm "$@"' >'fcm' \
+RUN echo -e '#!/bin/sh'"\n"'exec /opt/fcm-'"${FCM_VN}"'/bin/fcm "$@"' >'fcm' \
     && chmod +x 'fcm'
 
 # Build and install netCDF libraries.
