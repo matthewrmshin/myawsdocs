@@ -8,7 +8,7 @@ exports.handler = async function(event, context) {
   }
   const mybinpath = path.join(__dirname, 'index.bin')
   console.log(`executable: ${mybinpath}`);
-  const { stdout, stderr, error } = spawnSync(mybinpath, [], {'env': {'LD_LIBRARY_PATH': __dirname}});
+  const { stdout, stderr, error } = spawnSync(mybinpath, [], {'env': {'LD_LIBRARY_PATH': `${__dirname}:/lib64:/usr/lib64`}});
   console.log(`index.bin says ${stdout}`);
   console.error(`index.bin says: ${stderr}`);
   if (error) {
