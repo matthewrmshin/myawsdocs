@@ -1,6 +1,6 @@
 ---
 AWSTemplateFormatVersion: "2010-09-09"
-Description: Sample to show how to wrap Fortran executable with Python runtime
+Description: Sample to show how to wrap Fortran executable with runtime
 
 Parameters:
   SourcePackagesBucket:
@@ -49,12 +49,12 @@ Resources:
         S3Bucket:
           Fn::ImportValue: !Sub "${TagEnvironment}-${SourcePackagesBucket}"
         S3Key: moppa-services.zip
-      Description: Sample Python function that calls a Fortran executable
-      FunctionName: PythonWrapFortran
-      Handler: moppa.services.fortwrap.lambda_handler
+      Description: Sample function that calls a Fortran executable
+      FunctionName: FortranWrapper
+      Handler: moppa/services/index.handler
       MemorySize: 128
       Role: !GetAtt SampleLambdaExecutionRole.Arn
-      Runtime: python3.7
+      Runtime: nodejs10.x
       Timeout: 4
       Tags:
       - Key: ServiceName

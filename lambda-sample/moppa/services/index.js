@@ -1,13 +1,14 @@
 const { spawn } = require('child_process');
-const { tmpdir } = require('os');
 const path = require('path');
 const process = require('process');
 
 exports.handler = async function(event, context) {
   if (context && context.hasOwnProperty('awsRequestId')) {
-    console.log(context.awsRequestId);
+    console.log(`request ID: ${context.awsRequestId}`);
   }
-  const mybin = spawn(path.join(__dirname, 'index.bin'), [], {'cwd': tmpdir()});
+  mybinpath = path.join(__dirname, 'index.bin')
+  console.log(`executable: ${mybinpath}`);
+  const mybin = spawn(mybinpath);
   mybin.stdout.on('data', (data) => {
     console.log(`index.bin says ${data}`);
   });
@@ -17,6 +18,7 @@ exports.handler = async function(event, context) {
   mybin.on('close', (code) => {
     console.log(`index.bin returns ${code}`);
   });
+  console.log(`executable launched: ${mybinpath}`);
   return mybin;
 }
 

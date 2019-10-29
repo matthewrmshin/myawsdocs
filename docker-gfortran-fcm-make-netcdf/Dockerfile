@@ -13,7 +13,7 @@ RUN yum -y update \
 #       so building from source here.
 RUN yum -y install libcurl-devel make m4 zlib-devel \
     && yum -y install https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm \
-    && yum -y install hdf5 hdf5-devel
+    && yum -y install hdf5 hdf5-devel hdf5-static
 
 # Install FCM Make
 WORKDIR /opt
