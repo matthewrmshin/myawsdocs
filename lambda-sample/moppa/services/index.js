@@ -8,18 +8,14 @@ exports.handler = async function(event, context) {
   }
   const mybinpath = path.join(__dirname, 'index.bin')
   console.log(`executable: ${mybinpath}`);
-  const mybin = spawn(mybinpath);
-  mybin.stdout.on('data', (data) => {
-    console.log(`index.bin says ${data}`);
-  });
-  mybin.stderr.on('data', (data) => {
-    console.error(`index.bin says: ${data}`);
-  });
-  mybin.on('close', (code) => {
-    console.log(`index.bin returns ${code}`);
-  });
-  console.log(`executable launched: ${mybinpath}`);
-  return mybin;
+  const { stdout, stderr, error } = spawnSync(mybinpath);
+  console.log(`index.bin says ${stdout}`);
+  console.error(`index.bin says: ${stderr}`);
+  if (error) {
+    console.error(`index.bin returns ${error}`);
+  }
+  console.log(`executable done: ${mybinpath}`);
+  return;
 }
 
 if (require.main == module) {
