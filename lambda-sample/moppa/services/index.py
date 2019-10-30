@@ -1,7 +1,11 @@
+"""Handler that calls a binary executable on AWS lambda."""
+
+
+import json
 import logging
-import os
 from pathlib import Path
-from subprocess import Popen, PIPE
+from subprocess import run, CalledProcessError
+import sys
 
 
 logging.basicConfig(
@@ -11,37 +15,31 @@ logging.basicConfig(
 )
 LOG = logging.getLogger()
 LOG.setLevel(logging.INFO)
-FILENAME_WHO_NL = 'who.nl'
 
 
 def handler(event, context):
     """Handle the lambda call. "event" contains the payload."""
     LOG.info('event=%s', event)
-    invoke_hello(event, context)
-
-
-def invoke_hello(event, context):
-    """Invoke the "hello.bin" program."""
     mybin = Path(__file__).parent.joinpath('index.bin')
-    proc = Popen(
-        ['env', 'LD_LIBRARY_PATH=/var/task', str(mybin)],
-        stdout=PIPE,
-        stderr=PIPE)
-    out, err = proc.communicate()
-    if err:
-        LOG.error('%s says "%s"', mybin, err)
-    if out:
-        LOG.info('%s says "%s"', mybin, out)
-    if proc.wait():
-        exc = RuntimeError('%s returns %d' % (mybin, proc.returncode))
+    try:
+        proc = run([str(mybin)], capture_output=True, check=True)
+    except CalledProcessError as exc:
         LOG.exception(exc)
-        raise exc
+        raise
+    else:
+        if proc.stderr:
+            LOG.error('%s says "%s"', mybin, proc.stderr)
+        if proc.stdout:
+            LOG.info('%s says "%s"', mybin, proc.stdout)
+
+
+def main():
+    """CLI for testing."""
+    event = None
+    if sys.argv[1:]:
+        event = json.loads(sys.argv[1])
+    handler(event, None)
 
 
 if __name__ == '__main__':
-    import json
-    import sys
-    arg1 = None
-    if sys.argv[1:]:
-        arg1 = json.loads(sys.argv[1])
-    lambda_handler(arg1, None)
+    main()
