@@ -20,17 +20,25 @@ LOG.setLevel(logging.INFO)
 def handler(event, context):
     """Handle the lambda call. "event" contains the payload."""
     LOG.info('event=%s', event)
-    mybin = Path(__file__).parent.joinpath('index.bin')
+    mybindir = Path(__file__).parent
+    mybin = mybindir.joinpath('index.bin')
     try:
-        proc = run([str(mybin)], capture_output=True, check=True)
+        proc = run(
+            [str(mybin)], capture_output=True, check=True, cwd=str(mybindir))
     except CalledProcessError as exc:
+        log_proc(mybin, exc)
         LOG.exception(exc)
         raise
     else:
-        if proc.stderr:
-            LOG.error('%s says "%s"', mybin, proc.stderr)
-        if proc.stdout:
-            LOG.info('%s says "%s"', mybin, proc.stdout)
+        log_proc(mybin, proc)
+
+
+def log_proc(mybin, proc):
+    """Log the stdout/stderr from proc."""
+    if proc.stderr:
+        LOG.error('%s says "%s"', mybin, proc.stderr)
+    if proc.stdout:
+        LOG.info('%s says "%s"', mybin, proc.stdout)
 
 
 def main():
