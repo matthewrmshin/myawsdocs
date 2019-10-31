@@ -23,15 +23,13 @@ environment at work.
    to set up a profile. When prompted for a region, use `eu-west-2`
    which is *EU (London)* if you live in the UK.
 
-## amazonlinux2-gfortran-fcm-make-netcdf
+## Building Fortran executable on Amazon Linux
 
-In this folder is a `Dockerfile` that documents how to create an environment on
-Amazon Linux 2 to compile [JULES](https://jules.jchmr.org/)
-with [netCDF](https://www.unidata.ucar.edu/software/netcdf/).
-You can use the `Dockerfile` to build an image that installs:
-* `gfortran`
-* `fcm make`
-* Compatible versions of `netcdf-c` and `netcdf-fortran`.
+Current efforts documented in these projects:
+* [ami-gfortran-fcm-make](https://github.com/matthewrmshin/ami-gfortran-fcm-make)
+  Dockerfile based on Amazon Linux 1, with GFortran and FCM Make
+* [amazonlinux2-gfortran-fcm-make-netcdf](https://github.com/matthewrmshin/amazonlinux2-gfortran-fcm-make-netcdf)
+  Dockerfile based on Amazon Linux 2, with GFortran, FCM Make and netCDF libraries.
 
 > Alternatively, you can set up an AWS EC2 instance running Amazon Linux 2,
 > and roughly follow the instruction of the `Dockerfile` to create a suitable
@@ -46,7 +44,7 @@ instance by following the instructions:
 
 Once you are set up, build the docker image:
 1. Copy/Download the `Dockerfile` to a suitable folder. Change directory to it.
-2. Run `docker build -t myfortran .`
+2. E.g. `docker build -t myfortran .`
    * Note the `.` at the end of the command.
    * Change `myfortran` to a different name if you want.
 
@@ -61,18 +59,19 @@ Build JULES:
 2. Run the docker image, binding `$PWD` into a volume in the container. E.g.:
 
 ```sh
-docker run --rm -t -i -v $PWD:/opt/jules-5.5 myfortran \
+docker run --rm -t -i -v $PWD:/opt/jules-5.6 myfortran \
     env \
     JULES_PLATFORM=vm \
     JULES_NETCDF=netcdf \
     JULES_NETCDF_INC_PATH=/usr/local/include \
     JULES_NETCDF_LIB_PATH=/usr/local/lib \
-    fcm make -C /opt/jules-5.5 -f etc/fcm-make/make.cfg
+    fcm make -C /opt/jules-5.6 -f etc/fcm-make/make.cfg
 ```
 
-The executables should be located under `./build/bin/`.
-I have not yet figure out if this can be deployed in a lambda or not.
-I have also not tested this with real inputs.
+The executables should be located under `./build/bin/`. TODO:
+* Document how to compile static executable.
+  * Currently only Amazon Linux 1, no netCDF.
+* Document how to deploy executable to run under a Python lambda runtime.
 
 ## lambda-sample
 
