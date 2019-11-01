@@ -1,0 +1,16 @@
+name: Docker Image CI
+
+on: [push]
+
+jobs:
+
+  build:
+
+    runs-on: ubuntu-latest
+
+    env:
+      TAG: "${{github.repository}}:${{github.sha}}"
+
+    steps:
+    - name: Python Style Checker
+      uses: andymckay/pycodestyle-action@0.1.3

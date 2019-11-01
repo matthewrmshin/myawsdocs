@@ -11,6 +11,7 @@ import sys
 from tempfile import TemporaryDirectory
 
 import boto3
+import botocore
 import click
 
 
@@ -21,12 +22,6 @@ logging.basicConfig(
     stream=sys.stderr,
 )
 LOG = logging.getLogger()
-SOURCE_PACKAGES_STACK = 'source-packages'
-LAMBDA_STACK = 'lambda-sample'
-STACKS = (
-    SOURCE_PACKAGES_STACK,
-    LAMBDA_STACK,
-)
 
 
 @click.group()
@@ -42,118 +37,147 @@ def cli(ctx, profile):
 @click.pass_context
 def cli_setup(ctx):
     """CLI: Create and deploy the stacks with cloudformation."""
-    setup(ctx.obj.get('profile'))
+    StackMgr(ctx.obj.get('profile')).setup()
 
 
 @cli.command('teardown')
 @click.pass_context
 def cli_teardown(ctx):
     """CLI: Remove the deployed stacks."""
-    teardown(ctx.obj.get('profile'))
+    StackMgr(ctx.obj.get('profile')).teardown()
 
 
 @cli.command('validate')
 @click.pass_context
 def cli_validate(ctx):
     """CLI: Validate the cloudformation templates."""
-    validate(ctx.obj.get('profile'))
+    StackMgr(ctx.obj.get('profile')).validate()
 
 
-def create_stack(session: boto3.Session, name: str):
-    """Create a named cloudformation stack. Wait for creation to complete."""
-    cfn_client = session.client('cloudformation')
-    LOG.info('create stack: %s', name)
-    cfn_client.create_stack(
-        StackName=name,
-        TemplateBody=open(get_template_path(name)).read(),
-        Parameters=json.load(
-            open(Path(__file__).parent.joinpath('service-meta.json'))
-        ),
-        Capabilities=['CAPABILITY_IAM'],
+class StackMgr():
+    """Manage cloudformation stacks."""
+
+    SOURCE_PACKAGES_STACK = 'source-packages'
+    LAMBDA_STACK = 'lambda-sample'
+    STACKS = (
+        SOURCE_PACKAGES_STACK,
+        LAMBDA_STACK,
     )
-    cfn_client.get_waiter('stack_create_complete').wait(StackName=name)
-    LOG.info('create stack done: %s', name)
+
+    def __init__(self, profile_name: str):
+        self.session = boto3.Session(profile_name=profile_name)
 
 
-def delete_stack(session: boto3.Session, name: str):
-    """Delete a named cloudformation stack. Wait for deletion to complete."""
-    cfn_client = session.client('cloudformation')
-    LOG.info('delete stack: %s', name)
-    cfn_client.delete_stack(StackName=name)
-    cfn_client.get_waiter('stack_delete_complete').wait(StackName=name)
-    LOG.info('delete stack done: %s', name)
+    def create_stack(self, name: str):
+        """Create a named cloudformation stack.
+
+        Wait for creation to complete.
+        """
+        cfn_client = self.session.client('cloudformation')
+        LOG.info('create stack: %s', name)
+        cfn_client.create_stack(
+            StackName=name,
+            TemplateBody=open(self.get_template_path(name)).read(),
+            Parameters=json.load(
+                open(Path(__file__).parent.joinpath('service-meta.json'))
+            ),
+            Capabilities=['CAPABILITY_IAM'],
+        )
+        cfn_client.get_waiter('stack_create_complete').wait(StackName=name)
+        LOG.info('create stack done: %s', name)
 
 
-def get_lambda_bucket_name(session) -> str:
-    """Return name of S3 bucket hosting lambda code."""
-    cfn_client = session.client('cloudformation')
-    resources = cfn_client.describe_stack_resources(
-        StackName=SOURCE_PACKAGES_STACK)
-    return resources['StackResources'][0]['PhysicalResourceId']
+    def delete_stack(self, name: str):
+        """Delete a named cloudformation stack.
+
+        Wait for deletion to complete.
+        """
+        cfn_client = self.session.client('cloudformation')
+        LOG.info('delete stack: %s', name)
+        cfn_client.delete_stack(StackName=name)
+        cfn_client.get_waiter('stack_delete_complete').wait(StackName=name)
+        LOG.info('delete stack done: %s', name)
 
 
-def get_template_path(name: str) -> str:
-    """Return the path to a cloudformation template.
-
-    FIXME: We are making an assumption that of the locations of the templates
-           are *.yaml files relative to this script. This should be reviewed.
-    """
-    return str(Path(__file__).parent.joinpath(name).with_suffix('.yaml'))
-
-
-def remove_lambda_bucket(session: boto3.Session):
-    """Remove a bucket and its contents."""
-    bucket = session.resource('s3').Bucket(get_lambda_bucket_name(session))
-    bucket.objects.delete()
-    bucket.delete()
-    bucket.wait_until_not_exists()
+    def get_lambda_bucket_name(self) -> str:
+        """Return name of S3 bucket hosting lambda code."""
+        cfn_client = self.session.client('cloudformation')
+        resources = cfn_client.describe_stack_resources(
+            StackName=self.SOURCE_PACKAGES_STACK)
+        return resources['StackResources'][0]['PhysicalResourceId']
 
 
-def setup(profile_name: str):
-    """Create the cloudformation stacks.
+    @staticmethod
+    def get_template_path(name: str) -> str:
+        """Return the path to a cloudformation template.
 
-    Create the stacks. Subscribe to ServiceHub.
-    """
-    validate(profile_name)
-    # Upload ingestion lambda function code
-    session = boto3.Session(profile_name=profile_name)
-    tempdir = TemporaryDirectory()
-    tempname = Path(tempdir.name).joinpath('moppa-services')
-    make_archive(
-        str(tempname),
-        'zip',
-        Path(__file__).parent.parent.parent,
-        'moppa/services')
-    create_stack(session, SOURCE_PACKAGES_STACK)
-    # pylint: disable=E1101
-    bucket = session.resource('s3').Bucket(get_lambda_bucket_name(session))
-    bucket.upload_file(str(tempname.with_suffix('.zip')), 'moppa-services.zip')
-    tempdir.cleanup()
-    # Deploy lambda stack
-    create_stack(session, LAMBDA_STACK)
+        FIXME: We are making an assumption that of the locations of the
+               templates are *.yaml files relative to this script.
+               This should be reviewed.
+        """
+        return str(Path(__file__).parent.joinpath(name).with_suffix('.yaml'))
 
 
-def teardown(profile_name: str):
-    """Delete the cloudformation stacks."""
-    session = boto3.Session(profile_name=profile_name)
-    delete_stack(session, LAMBDA_STACK)
-    remove_lambda_bucket(session)
-    delete_stack(session, SOURCE_PACKAGES_STACK)
+    def remove_lambda_bucket(self):
+        """Remove a bucket and its contents."""
+        bucket = self.session.resource('s3').Bucket(
+            self.get_lambda_bucket_name())
+        bucket.objects.delete()
+        bucket.delete()
+        bucket.wait_until_not_exists()
 
 
-def validate(profile_name: str):
-    """Find and lint cloudformation templates.
+    def setup(self):
+        """Create the cloudformation stacks.
 
-    Assuming that the linter is doing its job, we should not need to call
-    "aws cloudformation validate-template" as well.
-    """
-    session = boto3.Session(profile_name=profile_name)
-    cfn_client = session.client('cloudformation')
-    for name in STACKS:
-        templ = get_template_path(name)
-        LOG.info('validate %s', templ)
-        run(['cfn-lint', templ], check=True)
-        cfn_client.validate_template(TemplateBody=open(templ).read())
+        Create the stacks. Subscribe to ServiceHub.
+        """
+        self.validate()
+        self.upload()
+        # Deploy lambda stack
+        self.create_stack(self.LAMBDA_STACK)
+
+
+    def teardown(self):
+        """Delete the cloudformation stacks."""
+        self.delete_stack(self.LAMBDA_STACK)
+        self.remove_lambda_bucket()
+        self.delete_stack(self.SOURCE_PACKAGES_STACK)
+
+    def upload(self):
+        """Create lambda package and upload."""
+        tempdir = TemporaryDirectory()
+        tempname = Path(tempdir.name).joinpath('moppa-services')
+        make_archive(
+            str(tempname),
+            'zip',
+            Path(__file__).parent.parent.parent,
+            'moppa/services')
+        try:
+            bucket_name = self.get_lambda_bucket_name()
+        except botocore.exceptions.ClientError as exc:
+            if LOG.isEnabledFor(logging.DEBUG):
+                LOG.exception(exc)
+            self.create_stack(self.SOURCE_PACKAGES_STACK)
+            bucket_name = self.get_lambda_bucket_name()
+        # pylint: disable=E1101
+        bucket = self.session.resource('s3').Bucket(bucket_name)
+        bucket.upload_file(
+            str(tempname.with_suffix('.zip')), 'moppa-services.zip')
+        tempdir.cleanup()
+
+    def validate(self):
+        """Find and lint cloudformation templates.
+
+        Assuming that the linter is doing its job, we should not need to call
+        "aws cloudformation validate-template" as well.
+        """
+        cfn_client = self.session.client('cloudformation')
+        for name in self.STACKS:
+            templ = self.get_template_path(name)
+            LOG.info('validate %s', templ)
+            run(['cfn-lint', templ], check=True)
+            cfn_client.validate_template(TemplateBody=open(templ).read())
 
 
 if __name__ == '__main__':
