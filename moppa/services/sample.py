@@ -10,6 +10,6 @@ LOG = logging.getLogger()
 LOG.setLevel(logging.INFO)
 
 
-def lambda_handler(event, context):
+def handler(event, context):
     LOG.info('event=%s', event)
     LOG.info('hello=world')

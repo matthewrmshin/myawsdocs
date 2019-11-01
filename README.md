@@ -2,18 +2,15 @@
 
 I am trying to document some of my set up while experimenting with AWS.
 
-# Locations
+# Getting Started
 
-## conda-aws-access
-
-In this folder is a `requirements.yml` file for creating a Conda
-environment that allows me to access AWS functionalities on my Linux
-environment at work.
+The `requirements.yml` file is for creating a Conda environment that allows me
+to access AWS functionalities on my Linux environment at work.
 
 1. Install [Miniconda](https://docs.conda.io/en/latest/miniconda.html)
    if you have not already done so.
-2. Download the `conda-aws-access/requirements.yml` file.
-3. Change directory to where the `requirements.yml` file is saved.
+2. Clone this repository or download a tree.
+3. Change directory to the source tree you have just cloned or downloaded.
 4. Run `conda env create`.
 5. Run `conda activate aws-access`.
 6. Type `aws` to test that you have access to the `aws` command.
@@ -48,6 +45,8 @@ Once you are set up, build the docker image:
    * Note the `.` at the end of the command.
    * Change `myfortran` to a different name if you want.
 
+## Building JULES executable on Amazon Linux
+
 Get JULES, export a suitable source tree from
 [MOSRS](https://code.metoffice.gov.uk/). (Account required.)
 1. Run `svn pget fcm:revision https://code.metoffice.gov.uk/svn/jules/main`
@@ -73,11 +72,13 @@ The executables should be located under `./build/bin/`. TODO:
   * Currently only Amazon Linux 1, no netCDF.
 * Document how to deploy executable to run under a Python lambda runtime.
 
-## lambda-sample
+## Lambda Deployment with Cloudformation
+
+(Should use SAM when it becomes feasible.)
 
 (NOT FULLY TESTED.)
 
-This folder contains logic and templates to use Cloudformation to set up (and
+This repository contains logic and templates to use Cloudformation to set up (and
 tear down) sample lambda functions from my Linux environment at work.
 
 The `moppa/cloudformation/lambda-sample.yaml` stack deploys a Python function
@@ -85,8 +86,8 @@ that prints the ingested event to the log.  It is set up to run every 5 minutes
 with a cron event.
 
 The `moppa/cloudformation/lambda-fortwrap.yaml` stack deploys a Python function
-to wrap a Fortran binary. The Fortran binary needs to be built for Amazon Linux 2
-with some libraries statically linked. This still require work to automate.
+to wrap a Fortran binary. The Fortran binary needs to be statically built for
+Amazon Linux. This still require work to automate.
 
 To use (in theory):
 1. Set up your environment using the `conda-aws-access` instruction above.
@@ -107,5 +108,3 @@ executable. E.g.: It should inspect the event payload, and creating the correct 
 based on the values in the event payload.
 
 Add automated tests for logic.
-
-Reorganise the project tree or put things in separate projects.
