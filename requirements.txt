@@ -1,0 +1,6 @@
+awscli
+boto3
+cfn-lint
+click
+flake8
+pytest

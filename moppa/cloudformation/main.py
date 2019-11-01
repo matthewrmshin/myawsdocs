@@ -67,7 +67,6 @@ class StackMgr():
     def __init__(self, profile_name: str):
         self.session = boto3.Session(profile_name=profile_name)
 
-
     def create_stack(self, name: str):
         """Create a named cloudformation stack.
 
@@ -86,7 +85,6 @@ class StackMgr():
         cfn_client.get_waiter('stack_create_complete').wait(StackName=name)
         LOG.info('create stack done: %s', name)
 
-
     def delete_stack(self, name: str):
         """Delete a named cloudformation stack.
 
@@ -98,14 +96,12 @@ class StackMgr():
         cfn_client.get_waiter('stack_delete_complete').wait(StackName=name)
         LOG.info('delete stack done: %s', name)
 
-
     def get_lambda_bucket_name(self) -> str:
         """Return name of S3 bucket hosting lambda code."""
         cfn_client = self.session.client('cloudformation')
         resources = cfn_client.describe_stack_resources(
             StackName=self.SOURCE_PACKAGES_STACK)
         return resources['StackResources'][0]['PhysicalResourceId']
-
 
     @staticmethod
     def get_template_path(name: str) -> str:
@@ -117,7 +113,6 @@ class StackMgr():
         """
         return str(Path(__file__).parent.joinpath(name).with_suffix('.yaml'))
 
-
     def remove_lambda_bucket(self):
         """Remove a bucket and its contents."""
         bucket = self.session.resource('s3').Bucket(
@@ -125,7 +120,6 @@ class StackMgr():
         bucket.objects.delete()
         bucket.delete()
         bucket.wait_until_not_exists()
-
 
     def setup(self):
         """Create the cloudformation stacks.
@@ -136,7 +130,6 @@ class StackMgr():
         self.upload()
         # Deploy lambda stack
         self.create_stack(self.LAMBDA_STACK)
-
 
     def teardown(self):
         """Delete the cloudformation stacks."""
