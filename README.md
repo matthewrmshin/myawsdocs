@@ -1,3 +1,7 @@
+<p>
+  <a href="https://github.com/actions/toolkit"><img alt="GitHub Actions status" src="https://github.com/matthewrmshin/myawsdocs/workflows/Python%20application/badge.svg"></a>
+</p>
+
 # What is this?
 
 I am trying to document some of my set up while experimenting with AWS.
