@@ -49,7 +49,7 @@ docker run --rm \
 # Prepare the package
 mkdir -p 'package/bin' 'package/lib'
 cp -p 'build/bin/jules.exe' 'package/bin/'
-docker run --rm -u "$(id -u):$(id -g)" -v "${PWD}/lib:/tmp/package/lib" \
+docker run --rm -u "$(id -u):$(id -g)" -v "${PWD}/package/lib:/tmp/package/lib" \
     "${IMAGE_ENV}" \
     bash -c 'cp -p /var/task/lib/*.so* /tmp/package/lib/'
 cp -pr "${JULES_TEST_SOURCE}" 'package/data'
