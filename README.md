@@ -40,43 +40,34 @@ instance by following the instructions:
 
 ## Building JULES executable for AWS Lambda
 
-Get JULES, export a suitable source tree from
-[MOSRS](https://code.metoffice.gov.uk/). (Account required.)
-1. Run `svn pget fcm:revision https://code.metoffice.gov.uk/svn/jules/main`
-   to find out the revision numbers of release versions or just go for trunk@HEAD.
-2. Run, for example, `svn export fcm:revision https://code.metoffice.gov.uk/svn/jules/main/trunk@15927 jules-5.6` to get a source tree for vn5.6.
+1. Get JULES, export a suitable source tree from
+   [MOSRS](https://code.metoffice.gov.uk/). (Account required.)
+   a. Run `svn pget fcm:revision https://code.metoffice.gov.uk/svn/jules/main`
+      to find out the revision numbers of release versions or just go for trunk@HEAD.
+   b. Run, for example, `svn export fcm:revision https://code.metoffice.gov.uk/svn/jules/main/trunk@15927 jules-5.6`
+      to get a source tree for vn5.6.
+2. Make sure you have write access to the current working directory.
+3. Clone this project. E.g. `git clone https://github.com/matthewrmshin/myawsdocs.git`.
+4. Prepare a sample directory with namelists and input files to JULES.
+   (See later on how to do this.)
+5. Run `./myawsdocs/jules-lambda/jules-lambda-build /path/to/jules /path/to/jules-sample-inputs`
+   where `/path/to/jules` is the path to the JULES source tree you exported from MOSRS in step 1,
+   and `/path/to/jules-sample-inputs` is the path to the sample input directory you prepared in step 4.
+6. If all goes well, you should find a lambda package in `./package.zip`.
 
-Build JULES:
-1. Change directory to the source tree. E.g. run `cd jules-5.6`.
-2. Run the docker image, binding `$PWD` into a volume in the container. E.g.:
+(Note: the Python wrapper `index.py` is still being worked on...)
 
-```sh
-docker run --rm -t -i -v "$PWD:/opt/jules-5.6" 'lambda-gfortran-fcm-make-netcdf' \
-    env \
-    JULES_PLATFORM=custom \
-    JULES_NETCDF=netcdf \
-    JULES_NETCDF_PATH=/var/task \
-    fcm make -C /opt/jules-5.6 -f etc/fcm-make/make.cfg
-```
+## How to prepare a sample inputs directory for JULES in AWS Lambda
 
-The JULES executable should be located under `./build/bin/jules.exe`.
-
-To package things up...
-* (Hopefully, a more automated way will follow.)
-* Create a new directory. Change directory to it.
-  E.g. `mkdir 'package'; pushd 'package'`.
-* Copy the shared libraries out of the docker image into `./lib/`.
-  E.g. `mkdir 'lib'; docker run --rm -t -i -v "$PWD:/tmp/package" 'lambda-gfortran-fcm-make-netcdf' cp -r '/var/task/lib' '/tmp/package/'`.
-* Copy `jules.exe` file to `./bin/`.
-* Add some runtime configuration, e.g. namelists to the package if appropriate.
-* Add a Python module with a lambda handler function. It should do:
-  * Invoke `/var/task/bin/jules.exe` with `subprocess.run` or otherwise.
-  * Turn event + input into input to the JULES executable.
-  * Send output from the JULES executable to a suitable location.
-  * (Example to follow.)
-* Review the content. Remove anything unnecessary.
-* Create a zip file with content of the current directory.
-* Deploy the package.
+For now... Choose a suitable [Rose](https://github.com/metomi/rose/) application configuration
+with JULES input. Inspect the `rose-app.conf`. Set:
+* Any location based variables to `.`. Note current locations of these input files.
+* Search for other environment variables substitution syntax. Make sure they are resolved.
+* Create a new directory elsewhere and change directory to it.
+  E.g. `mkdir /var/tmp/jules-sample-inputs; cd /var/tmp/jules-sample-inputs`.
+* Run `rose app-run -C $OLDPWD true`.
+* Make sure all other input files are copied in.
+* Set output directory to `./output`.
 
 ## Lambda Deployment with Cloudformation
 
