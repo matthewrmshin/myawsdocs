@@ -20,6 +20,7 @@ JULES_SOURCE="$1"
 JULES_TEST_SOURCE="$2"
 
 # Work in a temporary space
+HERED="$(dirname "$0")"
 ORIGD="${PWD}"
 WORKD="$(mktemp -d)"
 pushd "${WORKD}"  # "${ORIGD}" => "${WORKD}"
@@ -37,18 +38,11 @@ popd   # "${WORKD}/${IMAGE_ENV}" => "${WORKD}"
 # Build JULES executable
 docker run --rm \
     -u "$(id -u):$(id -g)" \
-    -v "${JULES_SOURCE}:/opt/jules" -v "${PWD}:/tmp/jules-build" \
+    -v "${JULES_SOURCE}:/opt/jules" \
+    -v "${HERED}/etc/fcm-make/platform/lambda.cfg:/opt/jules/etc/fcm-make/platform/lambda.cfg" \
+    -v "${PWD}:/tmp/jules-build" \
     "${IMAGE_ENV}" \
-    env \
-    JULES_BUILD='normal' \
-    JULES_NETCDF='netcdf' \
-    JULES_NETCDF_PATH='/var/task' \
-    JULES_NETCDF_INC_PATH='/var/task/include' \
-    JULES_NETCDF_LIB_PATH='/var/task/lib' \
-    JULES_REMOTE='local' \
-    JULES_COMPILER='gfortran' \
-    JULES_MPI='nompi' \
-    JULES_OMP='noomp' \
+    env JULES_PLATFORM='lambda' \
     fcm make -C '/tmp/jules-build' -f '/opt/jules/etc/fcm-make/make.cfg' \
     'build.target=jules.exe'
 
@@ -59,7 +53,7 @@ docker run --rm -u "$(id -u):$(id -g)" -v "${PWD}/package/lib:/tmp/package/lib" 
     "${IMAGE_ENV}" \
     bash -c 'cp -p /var/task/lib/*.so* /tmp/package/lib/'
 cp -pr "${JULES_TEST_SOURCE}" 'package/data'
-cp "$(dirname "$0")/index.py" 'package/'
+cp "${HERED}/index.py" 'package/'
 
 # Test the package
 docker run --rm -u "$(id -u):$(id -g)" -v "${PWD}/package:/var/task" \
