@@ -40,9 +40,11 @@ docker run --rm \
     -v "${JULES_SOURCE}:/opt/jules" -v "${PWD}:/tmp/jules-build" \
     "${IMAGE_ENV}" \
     env \
-    JULES_PLATFORM=custom \
-    JULES_NETCDF=netcdf \
-    JULES_NETCDF_PATH=/var/task \
+    JULES_NETCDF='netcdf' \
+    JULES_NETCDF_PATH='/var/task' \
+    JULES_REMOTE='local' \
+    JULES_COMPILER='gfortran' \
+    JULES_MPI='nompi' \
     fcm make -C '/tmp/jules-build' -f '/opt/jules/etc/fcm-make/make.cfg' \
     'build.target=jules.exe'
 
