@@ -44,7 +44,7 @@ instance by following the instructions:
    [MOSRS](https://code.metoffice.gov.uk/). (Account required.)
    a. Run `svn pget fcm:revision https://code.metoffice.gov.uk/svn/jules/main`
       to find out the revision numbers of release versions or just go for trunk@HEAD.
-   b. Run, for example, `svn export fcm:revision https://code.metoffice.gov.uk/svn/jules/main/trunk@15927 jules-5.6`
+   b. Run, for example, `svn export https://code.metoffice.gov.uk/svn/jules/main/trunk@15927 jules-5.6`
       to get a source tree for vn5.6.
 2. Make sure you have write access to the current working directory.
 3. Clone this project. E.g. `git clone https://github.com/matthewrmshin/myawsdocs.git`.
