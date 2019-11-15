@@ -23,12 +23,12 @@ LOG.setLevel(logging.INFO)
 def handler(event, context):
     """Handle the lambda call."""
     # Run in a temporary location to guarantee writable
+    LOG.info('event=%s', event)
     tempdir = TemporaryDirectory()
     os.chdir(tempdir.name)
     os.makedirs('output')
     extract_input(event)
     # Set up executable and shared library path
-    LOG.info('event=%s', event)
     mybin = os.path.join(os.path.dirname(__file__), 'bin', 'jules.exe')
     try:
         run([mybin], check=True)
