@@ -58,7 +58,7 @@ def main():
 
 def extract_input(event):
     """Get input from payload. Assume content is a tar(-gzip) archive."""
-    with tarfile.open(fileobj=io.BytesIO(event['body'])) as handle:
+    with tarfile.open(fileobj=io.StringIO(event['body'])) as handle:
         handle.extractall()
 
 
