@@ -52,19 +52,19 @@ cp -p 'build/bin/jules.exe' 'package/bin/'
 docker run --rm -u "$(id -u):$(id -g)" -v "${PWD}/package/lib:/tmp/package/lib" \
     "${IMAGE_ENV}" \
     bash -c 'cp -p /var/task/lib/*.so* /tmp/package/lib/'
-cp -pr "${JULES_TEST_SOURCE}" 'package/data'
+#cp -pr "${JULES_TEST_SOURCE}" 'package/data'
 cp "${HERED}/index.py" 'package/'
 
 # Test the package
-docker run --rm -u "$(id -u):$(id -g)" -v "${PWD}/package:/var/task" \
-    'lambci/lambda:python3.7' 'index.handler'
+#docker run --rm -u "$(id -u):$(id -g)" -v "${PWD}/package:/var/task" \
+#    'lambci/lambda:python3.7' 'index.handler'
 
 # Create the package zip file
 pushd 'package'  # "${WORKD}" => "${WORKD}/package"
-zip "${ORIGD}/package.zip" 'index.py' 'bin/'* 'data/'* 'lib/'*
+zip "${ORIGD}/package.zip" 'index.py' 'bin/'* 'lib/'*
 popd  # "${WORKD}/package" => "${WORKD}"
 
 popd  # "${WORKD}" => "${ORIGD}"
 rm -fr "${WORKD}"
-docker rmi "${IMAGE_ENV}"
+#docker rmi "${IMAGE_ENV}"
 exit
