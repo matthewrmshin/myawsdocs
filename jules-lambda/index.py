@@ -24,7 +24,6 @@ def handler(event, context):
     """Handle the lambda call."""
     # Run in a temporary location to guarantee writable
     tempdir = TemporaryDirectory()
-    oldcwd = os.getcwd()
     os.chdir(tempdir.name)
     os.makedirs('output')
     extract_input(event)
@@ -44,8 +43,8 @@ def handler(event, context):
             'isBase64Encoded': True,
         }
     finally:
+        os.chdir('/var/task')
         tempdir.cleanup()
-        os.chdir(oldcwd)
 
 
 def main():
