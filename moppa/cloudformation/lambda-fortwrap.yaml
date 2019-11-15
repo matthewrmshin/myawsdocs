@@ -48,10 +48,10 @@ Resources:
       Code:
         S3Bucket:
           Fn::ImportValue: !Sub "${TagEnvironment}-${SourcePackagesBucket}"
-        S3Key: moppa-services.zip
-      Description: Sample function that calls a Fortran executable
-      FunctionName: FortranWrapper
-      Handler: moppa/services/index.handler
+        S3Key: lambda-jules.zip
+      Description: Run JULES
+      FunctionName: jules
+      Handler: index.handler
       MemorySize: 128
       Role: !GetAtt SampleLambdaExecutionRole.Arn
       Runtime: python3.7

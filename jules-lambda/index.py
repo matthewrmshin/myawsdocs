@@ -1,13 +1,13 @@
 """Handler that calls a binary executable on AWS lambda."""
 
 
+import io
 import json
 import logging
 import os
-from pathlib import Path
-from shutil import copytree, copy2
 from subprocess import run, CalledProcessError
 import sys
+import tarfile
 from tempfile import TemporaryDirectory
 
 
@@ -27,18 +27,22 @@ def handler(event, context):
     oldcwd = os.getcwd()
     os.chdir(tempdir.name)
     os.makedirs('output')
-    pull_input()
+    extract_input(event)
     # Set up executable and shared library path
     LOG.info('event=%s', event)
-    mybindir = Path(__file__).parent
-    mybin = mybindir.joinpath('bin/jules.exe')
+    mybin = os.path.join(os.path.dirname(__file__), 'bin', 'jules.exe')
     try:
-        proc = run([str(mybin)], check=True)
+        run([mybin], check=True)
     except CalledProcessError as exc:
         LOG.exception(exc)
         raise
     else:
-        put_output()
+        return {
+            'statusCode': 200,
+            'body': get_output(),
+            'headers': {'content-type': 'application/octet-stream'},
+            'isBase64Encoded': True,
+        }
     finally:
         tempdir.cleanup()
         os.chdir(oldcwd)
@@ -52,27 +56,19 @@ def main():
     handler(event, None)
 
 
-def pull_input():
-    """Get input from source, assuming that the source is a zip file.
-
-    Source location hard coded for now.
-    It will become an item location in an S3 bucket.
-    """
-    for name in os.listdir('/var/task/data'):
-        copy2(os.path.join('/var/task/data', name), '.')
+def extract_input(event):
+    """Get input from payload. Assume content is a tar(-gzip) archive."""
+    with tarfile.open(fileobj=io.BytesIO(event['body'])) as handle:
+        handle.extractall()
 
 
-def put_output():
-    """Copy items in output directory to destination.
-
-    Destination location hard coded for now.
-    It will become an item location in an S3 bucket.
-    """
-    try:
-        copytree('./output', '/var/task/output')
-    except OSError as exc:
-        # Ignore error for now
-        LOG.exception(exc)
+def get_output():
+    """Read output, turning it into a string containing a tar-gzip archive."""
+    ret = io.BytesIO()
+    with tarfile.open(fileobj=ret, mode='w:gz') as handle:
+        for name in os.listdir('output'):
+            handle.add(os.path.join('output', name), name)
+    return ret
 
 
 if __name__ == '__main__':
