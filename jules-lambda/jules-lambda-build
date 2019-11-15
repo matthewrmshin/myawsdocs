@@ -12,12 +12,12 @@ for util in git docker zip; do
     fi
 done
 
-if [[ $# != 2 ]]; then
-    echo "Usage: $(basename "$0") JULES_SOURCE JULES_TEST_SOURCE" >&2
+if [[ $# != 1 ]]; then
+    echo "Usage: $(basename "$0") JULES_SOURCE" >&2
     exit 1
 fi
 JULES_SOURCE="$1"
-JULES_TEST_SOURCE="$2"
+#JULES_TEST_SOURCE="$2"
 
 # Work in a temporary space
 HERED="$(dirname "$0")"
