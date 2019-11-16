@@ -1,7 +1,7 @@
 """Handler that calls a binary executable on AWS lambda."""
 
 
-from base64 import b64decode
+from base64 import b64decode, b64encode
 import io
 import json
 import logging
@@ -64,11 +64,11 @@ def extract_input(event):
 
 def get_output():
     """Read output, turning it into a string containing a tar-gzip archive."""
-    ret = io.StringIO()
+    ret = io.BytesIO()
     with tarfile.open(fileobj=ret, mode='w:gz') as handle:
         for name in os.listdir('output'):
             handle.add(os.path.join('output', name), name)
-    return ret.getvalue()
+    return b64encode(ret.getvalue()).decode()
 
 
 if __name__ == '__main__':
