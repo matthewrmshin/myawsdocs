@@ -64,11 +64,11 @@ def extract_input(event):
 
 def get_output():
     """Read output, turning it into a string containing a tar-gzip archive."""
-    ret = io.BytesIO()
+    ret = io.StringIO()
     with tarfile.open(fileobj=ret, mode='w:gz') as handle:
         for name in os.listdir('output'):
             handle.add(os.path.join('output', name), name)
-    return ret.getvalue().decode()
+    return ret.getvalue()
 
 
 if __name__ == '__main__':
