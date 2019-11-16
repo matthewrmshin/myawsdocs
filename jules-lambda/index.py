@@ -68,7 +68,7 @@ def get_output():
     with tarfile.open(fileobj=ret, mode='w:gz') as handle:
         for name in os.listdir('output'):
             handle.add(os.path.join('output', name), name)
-    return ret
+    return ret.getvalue()
 
 
 if __name__ == '__main__':
